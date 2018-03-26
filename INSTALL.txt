@@ -1,0 +1,356 @@
+/**
+ * @package: Split Topic Type Mod (phpBB2 for RavenNuke(tm))
+ * @version: 1.1
+ * @file: admin_splittopictype.php
+ * @Version 1.0.3:
+ * copyright (c) by Ptirhiik (Pierre) http://www.rpgnet-fr.com/ 
+ * @RavenNuke(tm) Support: 2012 neralex
+ * @license http://opensource.org/licenses/gpl-license.php GNU Public License
+ *
+ * Before Adding This MOD To Your Forum, You Should Back Up All Files Related To This MOD!
+ *
+ */
+
+#
+#-----[ COPY ]------------------------------------------
+#
+modules/Forums/admin/admin_splittopictype.php > modules/Forums/admin/
+modules/Forums/templates/subSilver/admin/splittopictype_config.tpl > modules/Forums/templates/subSilver/admin/
+#
+#-----[ OPEN ]------------------------------------------
+#
+modules/Forums/viewforum.php
+#
+#-----[ FIND ]------------------------------------------
+#
+if( $total_topics )
+{
+#
+#-----[ AFTER, ADD ]------------------------------------------
+#
+//-- mod : split topic type
+	$prec_topic_real_type = -1;
+//-- fin mod : split topic type
+#
+#-----[ FIND ]------------------------------------------
+#
+			'U_VIEW_TOPIC' => $view_topic_url)
+		);
+#
+#-----[ AFTER, ADD ]------------------------------------------
+#
+		//-- mod : split topic type
+		$topic_real_type = $topic_rowset[$i]['topic_type'];
+		if (!$switch_split_announce) $topic_real_type = POST_NORMAL;
+		if ((!$switch_split_global_announce) && ($topic_real_type == POST_GLOBAL_ANNOUNCE)) $topic_real_type = POST_ANNOUNCE;
+		if ((!$switch_split_sticky) && ($topic_real_type == POST_STICKY) ) $topic_real_type = POST_NORMAL;
+		$is_rupt = false;
+		if ($prec_topic_real_type != $topic_real_type) {
+			if ($prec_topic_real_type == -1) $is_rupt = ($topic_real_type != POST_NORMAL);
+			if ($prec_topic_real_type != -1) $is_rupt = true;
+		}
+		if ($is_rupt) {
+			$title = '';
+			switch ($topic_real_type) {
+
+				case POST_GLOBAL_ANNOUNCE:
+					$title = $lang['Post_global_announcement'].'s';
+					break;
+
+				case POST_ANNOUNCE:
+					$title = $lang['Post_Announcement'].'s';
+					break;
+
+				case POST_STICKY:
+					$title = $lang['Post_Sticky'];
+					break;
+
+				case POST_NORMAL:
+					$title = $lang['Topics'];
+					break;
+
+				default:
+					$title = '???';
+					break;
+			}
+			$template->assign_block_vars('topicrow.topictype', array(
+				'TITLE' => $title,
+				)
+			);
+		}
+		$prec_topic_real_type = $topic_real_type;
+		//-- fin mod : split topic type
+#
+#-----[ OPEN ]------------------------------------------
+#
+includes/page_header.php
+#
+#-----[ FIND ]------------------------------------------
+#
+$template->pparse('overall_header');
+#
+#-----[ BEFORE, ADD ]-----------------------------------
+#
+//-- mod : split topic type
+if (isset( $board_config['split_announce'])) {
+	$switch_split_announce = $board_config['split_announce'];
+}
+if (isset($lang['Post_global_announcement']) && isset( $board_config['split_global_announce'])) {
+	$switch_split_global_announce = $board_config['split_global_announce'];
+}
+if (isset( $board_config['split_sticky'])) {
+	$switch_split_sticky = $board_config['split_sticky'];
+}
+//-- fin mod : split topic type
+#
+#-----[ OPEN ]------------------------------------------
+#
+# note : no change between v 1.0.2 and v 1.0.3
+#
+themes/YOUR_THEME/forums/viewforum_body.tpl
+#
+#-----[ FIND ]------------------------------------------
+#
+	<!-- BEGIN topicrow -->
+#
+#-----[ AFTER, ADD ]------------------------------------------
+# Note : take care to increment the colspan at your needs, ie if you've installed the Msg Icon mod
+#
+<!-- mod : split topic type -->
+	<!-- BEGIN topictype -->
+	<tr>
+	  <td colspan="6" class="catLeft text-left"><span class="split_cattitle">{topicrow.topictype.TITLE}</span></td>
+	</tr>
+	<!-- END topictype -->
+<!-- fin mod : split topic type -->
+#
+#-----[ OPEN ]------------------------------------------
+#
+modules/Forums/language/lang_english/lang_admin.php
+#
+#-----[ FIND ]------------------------------------------
+#
+//
+// That's all Folks!
+// -------------------------------------------------
+#
+#-----[ BEFORE, ADD ]------------------------------------------
+#
+//-- mod : split topic type
+$lang['Split_Topic_Type_Settings'] = 'Split Topic Type Settings';
+$lang['Split_Announce'] = 'Split announcement from other topic types';
+$lang['Split_Sticky'] = 'Split sticky topics';
+$lang['Split_GOBACKCONF'] = 'Click %sHere%s to return to the Split Topic Type Configuration';
+$lang['Split_DBINSTALLDONE'] = 'Database fields for Split Topic Type Mod was installed!';
+$lang['Split_Global_Announce'] = 'Split global announcement';
+//-- fin mod : split topic type
+#
+#-----[ SAVE/CLOSE ALL FILES ]------------------------------------------
+#
+# EoM
+
+#########################################################################
+# UPDATE from early MOD Version 1.0.3
+#########################################################################
+
+#
+#-----[ COPY ]------------------------------------------
+#
+modules/Forums/admin/admin_splittopictype.php > modules/Forums/admin/
+modules/Forums/templates/subSilver/admin/splittopictype_config.tpl > modules/Forums/templates/subSilver/admin/
+#
+#-----[ OPEN ]------------------------------------------
+#
+includes/page_header.php
+#
+#-----[ FIND ]------------------------------------------
+#
+//-- mod : split topic type ------------------------------------------------------------------------
+//-- add v 1.0.2
+// split ?
+$switch_split_announce = true;
+if ( !isset( $board_config['split_announce'] ) )
+{
+	$sqlw = "insert into ".CONFIG_TABLE." (config_name,config_value) VALUES('split_announce','" . $switch_split_announce . "')";
+	if ( !($resultw = $db->sql_query($sqlw)) ) message_die(GENERAL_ERROR, 'Could not add key split_annonce in config table', '', __LINE__, __FILE__, $sql);
+	$board_config['split_announce'] = $switch_split_announce;
+}
+if ( isset( $board_config['split_announce'] ) )
+{
+	$switch_split_announce = $board_config['split_announce'];
+}
+
+//-- add v 1.0.3
+// split global announce
+$switch_split_global_announce = isset($lang['Post_global_announcement']);
+if ( isset($lang['Post_global_announcement']) && !isset( $board_config['split_global_announce'] ) )
+{
+	$sqlw = "insert into ".CONFIG_TABLE." (config_name,config_value) VALUES('split_global_announce','" . $switch_split_global_announce . "')";
+	if ( !($resultw = $db->sql_query($sqlw)) ) message_die(GENERAL_ERROR, 'Could not add key split_annonce in config table', '', __LINE__, __FILE__, $sql);
+	$board_config['split_global_announce'] = $switch_split_global_announce;
+}
+if ( isset($lang['Post_global_announcement']) && isset( $board_config['split_global_announce'] ) )
+{
+	$switch_split_global_announce = $board_config['split_global_announce'];
+}
+//--
+
+// split sticky
+$switch_split_sticky = true;
+if ( !isset( $board_config['split_sticky'] ) )
+{
+	$sqlw = "insert into ".CONFIG_TABLE." (config_name,config_value) VALUES('split_sticky','" . $switch_split_sticky . "')";
+	if ( !($resultw = $db->sql_query($sqlw)) ) message_die(GENERAL_ERROR, 'Could not add key split_sticky in config table', '', __LINE__, __FILE__, $sql);
+	$board_config['split_sticky'] = $switch_split_sticky;
+}
+if ( isset( $board_config['split_sticky'] ) )
+{
+	$switch_split_sticky = $board_config['split_sticky'];
+}
+//-- fin mod : split topic type --------------------------------------------------------------------
+#
+#-----[ REPLACE IT WITH ]------------------------------------------
+#
+//-- mod : split topic type
+if (isset( $board_config['split_announce'])) {
+	$switch_split_announce = $board_config['split_announce'];
+}
+if (isset($lang['Post_global_announcement']) && isset( $board_config['split_global_announce'])) {
+	$switch_split_global_announce = $board_config['split_global_announce'];
+}
+if (isset( $board_config['split_sticky'])) {
+	$switch_split_sticky = $board_config['split_sticky'];
+}
+//-- fin mod : split topic type
+#
+#-----[ OPEN ]------------------------------------------
+#
+modules/Forums/admin/admin_board.php
+#
+#-----[ FIND & REMOVE ]------------------------------------------
+#
+//-- mod : split topic type ------------------------------------------------------------------------
+//-- add
+$split_announce_yes = ( $new['split_announce'] ) ? "checked=\"checked\"" : "";
+$split_announce_no  = (!$new['split_announce'] ) ? "checked=\"checked\"" : "";
+$split_sticky_yes   = ( $new['split_sticky'] )   ? "checked=\"checked\"" : "";
+$split_sticky_no    = (!$new['split_sticky'] )   ? "checked=\"checked\"" : "";
+//-- add v 1.0.3
+if ( isset($lang['Post_global_announcement']) )
+{
+	$split_global_announce_yes = ( $new['split_global_announce'] ) ? "checked=\"checked\"" : "";
+	$split_global_announce_no  = (!$new['split_global_announce'] ) ? "checked=\"checked\"" : "";
+}
+//-- fin mod : split topic type --------------------------------------------------------------------
+#
+#-----[ FIND & REMOVE ]------------------------------------------
+#
+//-- mod : split topic type ------------------------------------------------------------------------
+//-- add
+	"L_ANNOUNCEMENT_SETTINGS" => $lang['Announce_settings'],
+	"L_SPLIT_ANNOUNCE"        => $lang['split_announce'],
+	"SPLIT_ANNOUNCE_YES"      => $split_announce_yes,
+	"SPLIT_ANNOUNCE_NO"       => $split_announce_no,
+	"L_SPLIT_STICKY"          => $lang['split_sticky'],
+	"SPLIT_STICKY_YES"        => $split_sticky_yes,
+	"SPLIT_STICKY_NO"         => $split_sticky_no,
+//-- add v 1.0.3
+	"L_SPLIT_GLOBAL_ANNOUNCE" => $lang['split_global_announce'],
+	"SPLIT_GLOBAL_ANNOUNCE_YES" => $split_global_announce_yes,
+	"SPLIT_GLOBAL_ANNOUNCE_NO" => $split_global_announce_no,
+//-- fin mod : split topic type --------------------------------------------------------------------
+#
+#-----[ FIND & REMOVE ]------------------------------------------
+#
+//-- mod : split topic type ------------------------------------------------------------------------
+//-- add v 1.0.3
+if ( isset($lang['Post_global_announcement']) ) $template->assign_block_vars('switch_global_announce', array());
+//-- fin mod : split topic type --------------------------------------------------------------------
+#
+#-----[ OPEN ]------------------------------------------
+#
+modules/Forums/templates/subSilver/admin/board_config_body.tpl
+#
+#-----[ FIND & REMOVE ]------------------------------------------
+#
+<!-- mod : split topic type -->
+	<tr>
+		<th class="thHead" colspan="2">{L_ANNOUNCEMENT_SETTINGS}</th>
+	</tr>
+	<tr>
+		<td class="row1">{L_SPLIT_ANNOUNCE}</td>
+		<td class="row2"><input type="radio" name="split_announce" value="1" {SPLIT_ANNOUNCE_YES} /> {L_YES}&nbsp;&nbsp;<input type="radio" name="split_announce" value="0" {SPLIT_ANNOUNCE_NO} /> {L_NO}</td>
+	</tr>
+<!-- add v 1.0.3 -->
+	<!-- BEGIN switch_global_announce -->
+	<tr>
+		<td class="row1">{L_SPLIT_GLOBAL_ANNOUNCE}</td>
+		<td class="row2"><input type="radio" name="split_global_announce" value="1" {SPLIT_GLOBAL_ANNOUNCE_YES} /> {L_YES}&nbsp;&nbsp;<input type="radio" name="split_global_announce" value="0" {SPLIT_GLOBAL_ANNOUNCE_NO} /> {L_NO}</td>
+	</tr>
+	<!-- END switch_global_announce -->
+<!-- -->
+	<tr>
+		<td class="row1">{L_SPLIT_STICKY}</td>
+		<td class="row2"><input type="radio" name="split_sticky" value="1" {SPLIT_STICKY_YES} /> {L_YES}&nbsp;&nbsp;<input type="radio" name="split_sticky" value="0" {SPLIT_STICKY_NO} /> {L_NO}</td>
+	</tr>
+<!-- fin mod : split topic type -->
+#
+#-----[ OPEN ]------------------------------------------
+#
+modules/Forums/language/lang_english/lang_admin.php
+#
+#-----[ FIND ]------------------------------------------
+#
+//-- mod : split topic type ------------------------------------------------------------------------
+//-- add
+$lang['Announce_settings'] = 'Announcements Settings';
+$lang['split_announce'] = 'Split announcement from other topic types';
+$lang['split_sticky'] = 'Split sticky topics too';
+//-- add v 1.0.3
+$lang['split_global_announce'] = 'Split also global announcement';
+//-- fin mod : split topic type --------------------------------------------------------------------
+#
+#-----[ REPLACE IT WITH ]------------------------------------------
+#
+//-- mod : split topic type
+$lang['Split_Topic_Type_Settings'] = 'Split Topic Type Settings';
+$lang['Split_Announce'] = 'Split announcement from other topic types';
+$lang['Split_Sticky'] = 'Split sticky topics';
+$lang['Split_GOBACKCONF'] = 'Click %sHere%s to return to the Split Topic Type Configuration';
+$lang['Split_DBINSTALLDONE'] = 'Database fields for Split Topic Type Mod was installed!';
+$lang['Split_Global_Announce'] = 'Split global announcement';
+//-- fin mod : split topic type
+#
+#-----[ SAVE/CLOSE ALL FILES ]------------------------------------------
+#
+# EoM
+
+##############################################################
+## MOD Title: [2.0.4] split topic type
+## MOD Author: Ptirhiik < admin@rpgnet-fr.com > (Pierre) http://www.rpgnet-fr.com/ 
+## MOD Description: Split your forum into Stickie, Announcements, Global Announcements (when installed) and regular posts.
+## MOD Version: 1.0.3
+## 
+## Installation Level: easy
+## Installation Time: 5 Minutes 
+## Files To Edit:
+##			viewforum.php,
+##			includes/page_header.php,
+##			templates/subSilver/viewforum_body.tpl,
+##			language/lang_english/lang_admin.php
+## Included Files: n/a
+##############################################################
+############################################################## 
+## For Security Purposes, Please Check: http://www.phpbb.com/mods/downloads/ for the 
+## latest version of this MOD. Downloading this MOD from other sites could cause malicious code 
+## to enter into your phpBB Forum. As such, phpBB will not offer support for MOD's not offered 
+## in our MOD-Database, located at: http://www.phpbb.com/mods/downloads/ 
+############################################################## 
+############################################################## 
+## Author Note: 
+##		you can activate or deactivate the splits from the ACP
+##
+##	Changelog :
+##		v 1.0.3 : add the global announcement managing when mod global announcement is installed
+##		v 1.0.2 : fix a specific problem with a cache mod
+##############################################################
